@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+  <meta charset="UTF-8">
+  <title>Познай думата: за да, защото или заради?</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      padding: 20px;
+      background: #f2faff;
+    }
+    h1 { color: #004080; }
+    .question {
+      font-size: 24px;
+      margin: 20px 0;
+      transition: transform 0.3s ease, opacity 0.5s;
+    }
+    .question.correct-anim {
+      animation: pop 0.6s ease;
+    }
+    .question.wrong-anim {
+      animation: shake 0.5s ease;
+    }
+    @keyframes pop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      50% { transform: translateX(10px); }
+      75% { transform: translateX(-10px); }
+      100% { transform: translateX(0); }
+    }
+    .options button {
+      font-size: 20px;
+      margin: 10px;
+      padding: 10px 20px;
+      cursor: pointer;
+      border-radius: 10px;
+      border: none;
+      background: #cce0ff;
+      transition: background 0.3s;
+    }
+    .options button:hover { background: #99c2ff; }
+    .result {
+      font-size: 22px;
+      margin-top: 20px;
+    }
+    .correct {
+      color: green;
+      font-weight: bold;
+    }
+    .incorrect {
+      color: red;
+      font-weight: bold;
+    }
+    .celebration {
+      font-size: 28px;
+      color: #008000;
+      animation: fadeIn 2s ease-in;
+    }
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: scale(0.8); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+  <h1>🎲 Познай думата!</h1>
+  <div class="question" id="question"></div>
+  <div class="options">
+    <button onclick="checkAnswer('за да')">за да</button>
+    <button onclick="checkAnswer('защото')">защото</button>
+    <button onclick="checkAnswer('заради')">заради</button>
+  </div>
+  <div class="result" id="result"></div>
+
+  <audio id="correctSound">
+    <source src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg" type="audio/ogg">
+    <source src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.mp3" type="audio/mpeg">
+  </audio>
+  <audio id="wrongSound">
+    <source src="https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg" type="audio/ogg">
+    <source src="https://actions.google.com/sounds/v1/cartoon/cartoon_boing.mp3" type="audio/mpeg">
+  </audio>
+
+  <script src="questions.js"></script>
+  <script>
+    let usedIndices = [];
+    let currentQuestion;
+    const questionEl = document.getElementById("question");
+    const resultEl = document.getElementById("result");
+    const correctSound = document.getElementById("correctSound");
+    const wrongSound = document.getElementById("wrongSound");
+
+    function getRandomQuestion() {
+      if (usedIndices.length === questions.length) return null;
+      let index;
+      do {
+        index = Math.floor(Math.random() * questions.length);
+      } while (usedIndices.includes(index));
+      usedIndices.push(index);
+      return questions[index];
+    }
+
+    function showQuestion() {
+      const q = getRandomQuestion();
+      if (!q) {
+        questionEl.className = "question celebration";
+        questionEl.innerHTML = "✨ Свърши играта! Позна всички! ✨";
+        resultEl.innerHTML = "Играй пак, като презаредиш страницата!";
+        return;
+      }
+      currentQuestion = q;
+      questionEl.className = "question";
+      questionEl.innerHTML = `<strong>${q.text.replace("_____", "<span style='color: red;'>_____</span>")}</strong>`;
+      resultEl.innerText = "";
+    }
+
+    function checkAnswer(choice) {
+      let isCorrect = choice === currentQuestion.answer;
+      let colorClass = isCorrect ? "correct" : "incorrect";
+      const filledText = currentQuestion.text.replace("_____", `<span class='${colorClass}'>${choice}</span>`);
+      questionEl.innerHTML = `<strong>${filledText}</strong>`;
+      questionEl.classList.add(isCorrect ? "correct-anim" : "wrong-anim");
+
+      if (isCorrect) {
+        correctSound.play();
+        resultEl.innerHTML = "✅ Браво! Това е правилният отговор!";
+        setTimeout(showQuestion, 4000);
+      } else {
+        wrongSound.play();
+        resultEl.innerHTML = "❌ Опитай пак!";
+      }
+    }
+
+    showQuestion();
+  </script>
+</body>
+</html>
