@@ -66,17 +66,31 @@
       0% { opacity: 0; transform: scale(0.8); }
       100% { opacity: 1; transform: scale(1); }
     }
+    .hidden {
+      display: none;
+    }
+    #restartBtn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 18px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
   <h1>🎲 Познай думата!</h1>
   <div class="question" id="question"></div>
-  <div class="options">
+  <div class="options" id="options">
     <button onclick="checkAnswer('за да')">за да</button>
     <button onclick="checkAnswer('защото')">защото</button>
     <button onclick="checkAnswer('заради')">заради</button>
   </div>
   <div class="result" id="result"></div>
+  <button id="restartBtn" class="hidden" onclick="startGame()">Играй отново</button>
 
   <audio id="correctSound">
     <source src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg" type="audio/ogg">
@@ -91,32 +105,43 @@
   <script>
     let usedIndices = [];
     let currentQuestion;
+    let score = 0;
+    let questionCount = 0;
+    const maxQuestions = 10;
+
     const questionEl = document.getElementById("question");
     const resultEl = document.getElementById("result");
     const correctSound = document.getElementById("correctSound");
     const wrongSound = document.getElementById("wrongSound");
+    const optionsEl = document.getElementById("options");
+    const restartBtn = document.getElementById("restartBtn");
 
-    function getRandomQuestion() {
-      if (usedIndices.length === questions.length) return null;
-      let index;
-      do {
-        index = Math.floor(Math.random() * questions.length);
-      } while (usedIndices.includes(index));
-      usedIndices.push(index);
-      return questions[index];
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    function startGame() {
+      usedIndices = [];
+      score = 0;
+      questionCount = 0;
+      restartBtn.classList.add("hidden");
+      optionsEl.classList.remove("hidden");
+      shuffle(questions);
+      showQuestion();
     }
 
     function showQuestion() {
-      const q = getRandomQuestion();
-      if (!q) {
-        questionEl.className = "question celebration";
-        questionEl.innerHTML = "✨ Свърши играта! Позна всички! ✨";
-        resultEl.innerHTML = "Играй пак, като презаредиш страницата!";
+      if (questionCount >= maxQuestions || usedIndices.length >= questions.length) {
+        showResult();
         return;
       }
-      currentQuestion = q;
+      currentQuestion = questions[questionCount];
+      questionCount++;
       questionEl.className = "question";
-      questionEl.innerHTML = `<strong>${q.text.replace("_____", "<span style='color: red;'>_____</span>")}</strong>`;
+      questionEl.innerHTML = `<strong>${currentQuestion.text.replace("_____", "<span style='color: red;'>_____</span>")}</strong>`;
       resultEl.innerText = "";
     }
 
@@ -129,6 +154,7 @@
 
       if (isCorrect) {
         correctSound.play();
+        score++;
         resultEl.innerHTML = "✅ Браво! Това е правилният отговор!";
         setTimeout(showQuestion, 4000);
       } else {
@@ -137,7 +163,15 @@
       }
     }
 
-    showQuestion();
+    function showResult() {
+      questionEl.className = "question celebration";
+      questionEl.innerHTML = `✨ Свърши играта! ✨<br>Познати отговори: <strong>${score} от ${maxQuestions}</strong>`;
+      resultEl.innerHTML = "Браво! Можеш да играеш отново!";
+      optionsEl.classList.add("hidden");
+      restartBtn.classList.remove("hidden");
+    }
+
+    startGame();
   </script>
 </body>
 </html>
